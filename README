@@ -1,0 +1,36 @@
+Jane tree file generator
+========================
+
+Version 0.1
+Daniel Beer <dlbeer@gmail.com>
+7 Aug 2016
+
+This program is a utility which takes host and parasite trees (in NEXUS
+format), and a link matrix (in CSV format), and generates an input file
+for the Jane cophylogeny reconstruction software:
+
+    https://www.cs.hmc.edu/~hadas/jane/
+
+To run the GUI, open janex.exe. Use the options from the file menu to
+import a host tree, parasite tree and H-P link matrix. Trees are read
+from NEXUS files, where they must be the only tree in the file. Link
+matrices are CSV tables, where the first row and first column contain
+species labels, and the remaining cells contain either "1" or "true" to
+indicate the presence of a link. By default, it's assumed that row
+labels are host names and column labels are parasite names. You can swap
+these by selecting "Transpose H-P link matrix" from the "Edit" menu.
+
+The main area of the dialog will show a summary of the loaded data and
+indicate any errors found (duplicate names, or non-existent species
+referenced from the link matrix). Select "Export Jane tree file" from
+the "File" menu to generate the output file.
+
+There is also a command-line version (janex-cli.exe). Run this with
+--help to get a list of options.
+
+Bugs
+----
+
+Any bugs should be reported to me at the above email address. Note that
+currently, time ranks are not supported (all species are given a rank of
+1).
