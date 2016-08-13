@@ -41,11 +41,6 @@ let tree =
             junk s
             real s |> Some
         else None
-    let rec binarize d accum =
-        match accum with
-        | [] | [_] -> failwith "Node has fewer than two children"
-        | [r; l] -> Branch(l, r, d)
-        | (x :: xs) -> Branch(x, binarize d xs, d)
     let rec node s =
         if peek s = '(' then
             advance s 1
@@ -65,7 +60,7 @@ let tree =
         | ')' ->
             advance s 1
             let d = distance s
-            binarize d accum
+            Branch((List.rev accum), d)
         | _ -> failwith "Malformed child list"
     node
 
@@ -153,7 +148,7 @@ let extractTrees blk =
     let rec mapTree t =
         match t with
         | Leaf(n, d) -> Leaf(lookup n, d)
-        | Branch(l, r, d) -> Branch(mapTree l, mapTree r, d)
+        | Branch(cs, d) -> Branch(List.map mapTree cs, d)
     [ for n, t in blk.trees -> (n, mapTree t) ]
 
 // Extract all trees from a Jane file

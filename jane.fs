@@ -30,13 +30,14 @@ let flatten root =
     let rec visit n =
       match n with
       | Leaf(name, d) -> out.Add(FlatLeaf(name, d))
-      | Branch(l, r, d) ->
+      | Branch([l; r], d) ->
           let pi = out.Count
           out.Add(FlatLeaf(null, None))
           visit l
           let ri = out.Count
           visit r
           out.[pi] <- FlatBranch(pi+1, ri, d)
+      | Branch(_, d) -> failwith "Tree is not in binary form"
     visit root
     out.ToArray()
 
@@ -101,6 +102,7 @@ let printJane (out : StringBuilder) host para links =
     printDummyRanks out "PARASITE" para.Length host.Length
 
 let toJane host para links =
+    let prepare t = flatten <| binarize t
     let out = new StringBuilder()
-    printJane out (flatten host) (flatten para) links
+    printJane out (prepare host) (prepare para) links
     out.ToString()

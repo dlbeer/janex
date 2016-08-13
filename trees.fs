@@ -19,7 +19,7 @@ open System.Collections.Generic
 
 type Tree =
   | Leaf of string * float option
-  | Branch of Tree * Tree * float option
+  | Branch of Tree list * float option
 
 // Obtain the set of names in the tree, and make sure they're unique
 let nameSet t =
@@ -29,8 +29,24 @@ let nameSet t =
       | Leaf(name, _) ->
         if out.Add(name) then ()
         else failwith ("Duplicate species name: " + name)
-      | Branch(l, r, _) ->
-        visit l
-        visit r
+      | Branch(cs, _) -> List.iter visit cs
     visit t
     out
+
+// Add distance to a given node
+let addToNode dp n =
+    let addDistance a b =
+        match (a, b) with
+        | (Some av, Some bv) -> Some (av + bv)
+        | (_, _) -> None
+    match n with
+    | Leaf(name, d) -> Leaf(name, addDistance d dp)
+    | Branch(cs, d) -> Branch(cs, addDistance d dp)
+
+// Convert a tree to binary form
+let rec binarize t =
+    match t with
+    | Leaf(_, _) -> t
+    | Branch([], d) -> failwith "Empty branch"
+    | Branch([s], d) -> addToNode d s
+    | Branch(f :: rest, d) -> Branch([f; binarize(Branch(rest, Some 0.0))], d)
