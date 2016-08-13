@@ -102,7 +102,16 @@ let printJane (out : StringBuilder) host para links =
     printDummyRanks out "PARASITE" para.Length host.Length
 
 let toJane host para links =
-    let prepare t = flatten <| binarize t
+    let prepare what names t =
+      match filter t names with
+      | None -> failwithf "Empty %s tree after filtering" what
+      | Some t ->
+        match binarize t with
+        | None -> failwithf "Empty %s tree after binarization" what
+        | Some t -> flatten t
+    let host = prepare "host" (List.map fst links) host
+    let para = prepare "parasite" (List.map snd links) para
+
     let out = new StringBuilder()
-    printJane out (prepare host) (prepare para) links
+    printJane out host para links
     out.ToString()

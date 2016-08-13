@@ -46,7 +46,29 @@ let addToNode dp n =
 // Convert a tree to binary form
 let rec binarize t =
     match t with
-    | Leaf(_, _) -> t
-    | Branch([], d) -> failwith "Empty branch"
-    | Branch([s], d) -> addToNode d s
-    | Branch(f :: rest, d) -> Branch([f; binarize(Branch(rest, Some 0.0))], d)
+    | Leaf(_, _) -> Some t
+    | Branch(cs, d) ->
+      let cs = List.choose binarize cs
+      let rec unwrap cs =
+          match cs with
+          | [l; r] -> Branch([l; r], Some 0.0)
+          | (l :: rest) -> Branch([l; unwrap rest], Some 0.0)
+          | _ -> failwith "Malformed argument to unwrap"
+      match cs with
+      | [] -> None
+      | [c] -> addToNode d c |> Some
+      | [l; r] -> Branch([l; r], d) |> Some
+      | (l :: rest) -> Branch([l; unwrap rest], d) |> Some
+
+// Filter unwanted nodes from a tree
+let filter t keep =
+    let keepSet = new HashSet<string>()
+    for k in keep do
+        keepSet.Add(k) |> ignore
+
+    let rec aux n =
+        match n with
+        | Leaf(name, _) -> if keepSet.Contains(name) then Some n else None
+        | Branch(cs, d) -> Some (Branch(List.choose aux cs, d))
+
+    aux t
