@@ -108,6 +108,7 @@ type Dialog() as this =
         this.Controls.Add(menu)
         this.Controls.Add(status)
         this.UpdateStatus()
+
         this.ClientSize <- new Size(600, 400)
         this.UpdateSize()
 
@@ -125,7 +126,7 @@ type Dialog() as this =
           new Point(status.Margin.Left, y + status.Margin.Top)
         status.Size <-
           new Size(w - status.Margin.Horizontal,
-                   this.ClientSize.Height - status.Margin.Vertical)
+                   this.ClientSize.Height - status.Margin.Vertical - y)
 
     member this.ClearHosts() =
         hosts <- None
