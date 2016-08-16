@@ -28,6 +28,7 @@ open System.Windows.Forms
 type MenuItem =
   | Separator
   | Item of string * (unit -> unit)
+  | ItemSC of string * (unit -> unit) * Keys
 
 let buildMenu (menu : MenuStrip) name items =
     let m = new ToolStripMenuItem(name : string)
@@ -38,6 +39,11 @@ let buildMenu (menu : MenuStrip) name items =
         | Item(k, f) ->
           let i = new ToolStripMenuItem(k : string)
           i.Click.Add(fun _ -> f ())
+          m.DropDownItems.Add(i) |> ignore
+        | ItemSC(k, f, sc) ->
+          let i = new ToolStripMenuItem(k : string)
+          i.Click.Add(fun _ -> f ())
+          i.ShortcutKeys <- sc
           m.DropDownItems.Add(i) |> ignore
     menu.Items.Add(m) |> ignore
 
@@ -62,7 +68,11 @@ type Dialog() as this =
     inherit Form()
 
     let menu = new MenuStrip()
-    let status = new Label()
+    let status =
+      new TextBox(
+        Multiline = true,
+        ReadOnly = true,
+        ScrollBars = ScrollBars.Vertical)
 
     let mutable hosts : Tree option = None
     let mutable parasites : Tree option = None
@@ -78,7 +88,8 @@ type Dialog() as this =
           Separator
           Item("&Export Jane tree file...", this.ExportJane)
           Separator
-          Item("&Quit", fun () -> this.DialogResult <- DialogResult.OK) ]
+          ItemSC("&Quit", (fun () -> this.DialogResult <- DialogResult.OK),
+                 Keys.Control ||| Keys.Q) ]
 
         buildMenu menu "&Edit" [
           Item("&Transpose H-P link matrix", this.TransposeHP)
@@ -86,7 +97,10 @@ type Dialog() as this =
           Separator
           Item("Clear &hosts", this.ClearHosts)
           Item("Clear &parasites", this.ClearParasites)
-          Item("Clear H-P link &matrix", this.ClearLinks) ]
+          Item("Clear H-P link &matrix", this.ClearLinks)
+          Separator
+          ItemSC("&Copy", (fun () -> status.Copy()),
+                 Keys.Control ||| Keys.C) ]
 
         buildMenu menu "&Help" [
           Item("&About", this.About) ]
@@ -189,6 +203,7 @@ type Dialog() as this =
         Linter.checkAll hosts parasites links <| fun m ->
           out.Append(Linter.formatMessage m + "\n") |> ignore
         status.Text <- out.ToString()
+        status.Select(0, 0)
 
 [<EntryPoint>]
 let main args =
