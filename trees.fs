@@ -72,3 +72,9 @@ let filter t keep =
         | Branch(cs, d) -> Some (Branch(List.choose aux cs, d))
 
     aux t
+
+// Count the number of leaves in a tree
+let rec count t =
+    match t with
+    | Leaf(_, _) -> 1
+    | Branch(cs, _) -> List.map count cs |> List.fold (+) 0

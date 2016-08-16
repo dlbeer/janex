@@ -46,37 +46,6 @@ let showError title (ex : exn) =
         MessageBoxButtons.OK,
         MessageBoxIcon.Error) |> ignore
 
-let summarizeTree (out : StringBuilder) what t =
-    match t with
-    | None ->
-      out.Append(sprintf "%s: no tree loaded\n" what) |> ignore
-    | Some h ->
-      try
-        let names = nameSet h
-        out.Append(sprintf "%s: %d species\n" what names.Count) |> ignore
-      with
-        ex -> out.Append(sprintf "ERROR: %s: %s" what ex.Message) |> ignore
-    out.Append("\n") |> ignore
-
-let checkLinks (out : StringBuilder) what f t l =
-    match t with
-    | None -> ()
-    | Some tr ->
-      let tab = nameSet tr
-      let rec check lst =
-        match lst with
-        | [] ->
-          out.Append(sprintf "Link matrix: all %ss matched\n" what) |> ignore
-        | (i :: is) ->
-          let name = f i
-          if tab.Contains(name) then
-            check is
-          else
-            out.Append(sprintf "ERROR: link matrix: \
-                                %s species '%s' not found\n"
-                         what name) |> ignore
-      if l <> [] then check l
-
 let importNexus what cfunc =
     use d = new OpenFileDialog(
                 Title = "Import " + what,
@@ -117,8 +86,7 @@ type Dialog() as this =
           Separator
           Item("Clear &hosts", this.ClearHosts)
           Item("Clear &parasites", this.ClearParasites)
-          Item("Clear H-P link &matrix", this.ClearLinks)
-          ]
+          Item("Clear H-P link &matrix", this.ClearLinks) ]
 
         buildMenu menu "&Help" [
           Item("&About", this.About) ]
@@ -218,20 +186,8 @@ type Dialog() as this =
 
     member this.UpdateStatus() =
         let out = new StringBuilder()
-        summarizeTree out "Hosts" hosts
-        summarizeTree out "Parasites" parasites
-
-        let hl = new HashSet<string>()
-        let pl = new HashSet<string>()
-        for h, p in links do
-          hl.Add(h) |> ignore
-          pl.Add(p) |> ignore
-        out.Append(sprintf "Link matrix: %d hosts <--> %d parasites\n\n"
-          hl.Count pl.Count) |> ignore
-
-        checkLinks out "host" fst hosts links
-        checkLinks out "parasite" snd parasites links
-
+        Linter.checkAll hosts parasites links <| fun m ->
+          out.Append(Linter.formatMessage m + "\n") |> ignore
         status.Text <- out.ToString()
 
 [<EntryPoint>]

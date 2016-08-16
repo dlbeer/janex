@@ -15,6 +15,7 @@
 
 SRC_COMMON = \
     trees.fs \
+    linter.fs \
     scanner.fs \
     csv.fs \
     nexus.fs \
