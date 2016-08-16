@@ -15,7 +15,10 @@
 
 module Janex.CLI
 
+open System
 open System.IO
+open System.Text
+open System.Collections.Generic
 
 let helpText = "\
 Usage: janex-cli [options] <hosts.nex> <parasites.nex>
@@ -33,14 +36,16 @@ the corresponding host and parasite.
 
 Options may be any of the following:
 
-  --help                Show this text (short: -?)
-  --version             Show version banner
+  --help                Show this text (short: -?).
+  --version             Show version banner.
   --out <file.tree>     Write Jane tree file to the specified file
-                        (short: -o)
+                        (short: -o).
   --links <file.csv>    Read host-parasite link matrix from the given
-                        file (short: -l)
+                        file (short: -l).
+  --check               Don't generate a Jane file. Instead, check the
+                        input data for errors and report (short: -c).
   --transpose           Swap rows and columns in the link matrix
-                        (short: -t)
+                        (short: -t).
 "
 
 let loadTree what n =
@@ -48,6 +53,20 @@ let loadTree what n =
     File.ReadAllText n |> Scanner.parse Nexus.parseFile |> Nexus.onlyTree
   with
     ex -> failwith (sprintf "%s: %s" what ex.Message)
+
+let loadData (opt : Dictionary<string, string>) (nonopt : string[]) =
+    let h = loadTree "Hosts" nonopt.[0]
+    let p = loadTree "Parasites" nonopt.[1]
+    let lraw =
+      match opt.TryGetValue("links") with
+      | (false, _) -> []
+      | (true, fn) ->
+        File.ReadAllText fn |> Scanner.parse CSV.sheet |> Links.fromTable
+    let l =
+      if opt.ContainsKey("transpose") then
+        [ for (h, p) in lraw -> (p, h) ]
+      else lraw
+    (h, p, l)
 
 let run args =
     let (opt, nonopt) =
@@ -57,6 +76,7 @@ let run args =
         ("out",           Some 'o',       true)
         ("links",         Some 'l',       true)
         ("transpose",     Some 't',       false)
+        ("check",         Some 'c',       false)
       ] args
 
     if opt.ContainsKey("help") then
@@ -67,21 +87,25 @@ let run args =
     elif nonopt.Length < 2 then
       failwith "You need to specify a host and parasite input file"
     else
-      let h = loadTree "Hosts" nonopt.[0]
-      let p = loadTree "Parasites" nonopt.[1]
-      let lraw =
-        match opt.TryGetValue("links") with
-        | (false, _) -> []
+      let (h, p, l) = loadData opt nonopt
+      if opt.ContainsKey("check") then
+        match opt.TryGetValue("out") with
+        | (false, _) ->
+          Linter.checkAll (Some h) (Some p) l <| fun (lvl, m) ->
+            match lvl with
+            | Linter.Info  -> Console.ResetColor()
+            | Linter.Error -> Console.ForegroundColor <- ConsoleColor.Red
+            Console.WriteLine(Linter.formatMessage (lvl, m))
         | (true, fn) ->
-          File.ReadAllText fn |> Scanner.parse CSV.sheet |> Links.fromTable
-      let l =
-        if opt.ContainsKey("transpose") then
-          [ for (h, p) in lraw -> (p, h) ]
-        else lraw
-      let o = Jane.toJane h p l
-      match opt.TryGetValue("out") with
-      | (false, _) -> System.Console.Out.Write(o)
-      | (true, fn) -> File.WriteAllText(fn, o)
+          let text = new StringBuilder()
+          Linter.checkAll (Some h) (Some p) l <| fun m ->
+            text.Append(Linter.formatMessage m + "\n") |> ignore
+          File.WriteAllText(fn, text.ToString())
+      else
+        let o = Jane.toJane h p l
+        match opt.TryGetValue("out") with
+        | (false, _) -> System.Console.Out.Write(o)
+        | (true, fn) -> File.WriteAllText(fn, o)
 
 [<EntryPoint>]
 let main args =
@@ -89,5 +113,6 @@ let main args =
       run args
       0
     with ex ->
-      System.Console.Error.Write(sprintf "ERROR: %s\n" ex.Message)
+      Console.ForegroundColor <- ConsoleColor.Red
+      Console.Error.Write(sprintf "ERROR: %s\n" ex.Message)
       1

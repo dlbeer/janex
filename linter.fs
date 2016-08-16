@@ -20,7 +20,7 @@ open System.Collections.Generic
 
 open Trees
 
-type Level = Info | Warning | Error
+type Level = Info | Error
 type Message = Level * string
 
 let checkNames what t out =
@@ -81,5 +81,4 @@ let formatMessage (l, m) =
     sprintf "%s%s" (
       match l with
       | Info ->    ""
-      | Warning -> "Warning: "
       | Error ->   "ERROR: ") m
