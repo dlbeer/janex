@@ -21,7 +21,7 @@ open System.Text
 open System.Collections.Generic
 
 let helpText = "\
-Usage: janex-cli [options] <hosts.nex> <parasites.nex>
+Usage: janex-cli [options] <hosts.nex> <parasites.nex> <links.csv>
 
 Hosts and parasites should be supplied in NEXUS files, each containing
 exactly one tree. Output is written to stdout if no output file is
@@ -40,8 +40,6 @@ Options may be any of the following:
   --version             Show version banner.
   --out <file.tree>     Write Jane tree file to the specified file
                         (short: -o).
-  --links <file.csv>    Read host-parasite link matrix from the given
-                        file (short: -l).
   --check               Don't generate a Jane file. Instead, check the
                         input data for errors and report (short: -c).
   --transpose           Swap rows and columns in the link matrix
@@ -57,11 +55,8 @@ let loadTree what n =
 let loadData (opt : Dictionary<string, string>) (nonopt : string[]) =
     let h = loadTree "Hosts" nonopt.[0]
     let p = loadTree "Parasites" nonopt.[1]
-    let lraw =
-      match opt.TryGetValue("links") with
-      | (false, _) -> []
-      | (true, fn) ->
-        File.ReadAllText fn |> Scanner.parse CSV.sheet |> Links.fromTable
+    let lraw = File.ReadAllText nonopt.[2] |>
+                 Scanner.parse CSV.sheet |> Links.fromTable
     let l =
       if opt.ContainsKey("transpose") then
         [ for (h, p) in lraw -> (p, h) ]
@@ -74,7 +69,6 @@ let run args =
         ("help",          Some '?',       false)
         ("version",       None,           false)
         ("out",           Some 'o',       true)
-        ("links",         Some 'l',       true)
         ("transpose",     Some 't',       false)
         ("check",         Some 'c',       false)
       ] args
@@ -84,8 +78,8 @@ let run args =
     elif opt.ContainsKey("version") then
       printfn "Jane tree file generator, version 0.1"
       printfn "Copyright (C) 2016 Daniel Beer <dlbeer@gmail.com>"
-    elif nonopt.Length < 2 then
-      failwith "You need to specify a host and parasite input file"
+    elif nonopt.Length < 3 then
+      failwith "You need to specify two trees and a link matrix"
     else
       let (h, p, l) = loadData opt nonopt
       if opt.ContainsKey("check") then
