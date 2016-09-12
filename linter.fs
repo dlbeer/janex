@@ -35,8 +35,9 @@ let checkNames what t out =
     names
 
 let checkEndpoints what (names : HashSet<string>) eps out =
+    let checkList = new HashSet<string>()
     List.iter (fun e ->
-      if not (names.Contains(e)) then
+      if not (names.Contains(e)) && checkList.Add(e) then
         out (Error, sprintf "Unknown %s species: %s" what e)) eps
 
 let countUniqueEndpoints eps =
