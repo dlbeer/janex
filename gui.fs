@@ -202,7 +202,7 @@ type Dialog() as this =
     member this.UpdateStatus() =
         let out = new StringBuilder()
         Linter.checkAll hosts parasites links <| fun m ->
-          out.Append(Linter.formatMessage m + "\n") |> ignore
+          out.Append(Linter.formatMessage m + "\r\n") |> ignore
         status.Text <- out.ToString()
         status.Select(0, 0)
 
