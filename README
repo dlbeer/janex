@@ -1,9 +1,9 @@
 Jane tree file generator
 ========================
 
-Version 0.3
+Version 0.4
 Daniel Beer <dlbeer@gmail.com>
-13 Sep 2016
+3 Oct 2016
 
 This program is a utility which takes host and parasite trees (in NEXUS
 format), and a link matrix (in CSV format), and generates an input file

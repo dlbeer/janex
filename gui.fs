@@ -193,7 +193,7 @@ type Dialog() as this =
 
     member this.About() =
         MessageBox.Show(
-            "Jane tree file generator, version 0.3\n\n\
+            "Jane tree file generator, version 0.4\n\n\
              Copyright \u00a9 2016 Daniel Beer <dlbeer@gmail.com>",
             "About",
             MessageBoxButtons.OK,

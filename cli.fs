@@ -76,7 +76,7 @@ let run args =
     if opt.ContainsKey("help") then
       printf "%s" helpText
     elif opt.ContainsKey("version") then
-      printfn "Jane tree file generator, version 0.3"
+      printfn "Jane tree file generator, version 0.4"
       printfn "Copyright (C) 2016 Daniel Beer <dlbeer@gmail.com>"
     elif nonopt.Length < 3 then
       failwith "You need to specify two trees and a link matrix"
