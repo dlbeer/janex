@@ -104,6 +104,9 @@ let parseBlock s =
           semicolon s
           { accum with trees = List.rev accum.trees }
         | "tree" ->
+          if peek s = '*' then
+            advance s 1
+            junk s
           let n = word s
           junk s
           if peek s <> '=' then failwith "Expected equals sign" else ()
