@@ -28,13 +28,13 @@ SRC_CLI = $(SRC_COMMON) getopt.fs cli.fs
 all: janex.exe janex-cli.exe
 
 janex.exe: $(SRC_GUI)
-	fsharpc --target:winexe -o $@ $^ \
+	fsharpc --standalone --target:winexe -o $@ $^ \
 	    -r:System.Windows.Forms.dll \
 	    -r:System.Drawing.dll
 	chmod 755 $@
 
 janex-cli.exe: $(SRC_CLI)
-	fsharpc -o $@ $^
+	fsharpc --standalone -o $@ $^
 	chmod 755 $@
 
 clean:
